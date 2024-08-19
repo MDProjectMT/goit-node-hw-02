@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import nanoid from "nanoid";
+import { nanoid } from "nanoid";
 
 const contactsPath = path.resolve("./models/contacts.json");
 
@@ -9,7 +9,6 @@ const listContacts = async () => {
     await fs.access(contactsPath);
     const file = await fs.readFile(contactsPath);
     const contacts = JSON.parse(file);
-    console.table(contacts);
     return contacts;
   } catch (error) {
     console.error("Wystąpił błąd podczas pobierania listy kontaktów", error);
@@ -37,17 +36,50 @@ const removeContact = async (contactId) => {
   }
 };
 
-const addContact = async (body) => {
-  // const contacts = listContacts();
-  // const { name, email, phone } = contacts.push({
-  //   id: nanoid(21),
-  //   name,
-  //   email,
-  //   phone,
-  // });
+const addContact = async (name, email, phone) => {
+  try {
+    const contacts = await listContacts();
+    const newContact = {
+      id: nanoid(21),
+      name,
+      email,
+      phone,
+    };
+    const updateListContacts = [...contacts, newContact];
+    await fs.writeFile(contactsPath, JSON.stringify(updateListContacts));
+    return newContact;
+  } catch (error) {
+    console.error("Coś poszło nie tak", error);
+  }
 };
 
-const updateContact = async (contactId, body) => {};
+const updateContact = async (contactId, name, email, phone) => {
+  try {
+    const contacts = await listContacts();
+    const contact = contacts.find((contact) => contact.id === contactId);
+    if (!contact) {
+      return null;
+    }
+    const updates = {};
+    if (name) updates.name = name;
+    if (email) updates.email = email;
+    if (phone) updates.phone = phone;
+
+    const updateContact = { ...contact, ...updates };
+
+    const updatedContactsList = contacts.map((contact) =>
+      contact.id === contactId ? updateContact : contact
+    );
+
+    await fs.writeFile(
+      contactsPath,
+      JSON.stringify(updatedContactsList, null, 2)
+    );
+    return updateContact;
+  } catch (error) {
+    console.error("Coś poszło nie tak", error);
+  }
+};
 
 export {
   listContacts,
