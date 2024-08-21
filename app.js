@@ -2,10 +2,10 @@ import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
-import "colors";
 import logger from "morgan";
 import cors from "cors";
 import contactsRouter from "./routes/api/contacts.js";
+import "colors";
 
 dotenv.config();
 
