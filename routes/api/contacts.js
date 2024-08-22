@@ -109,7 +109,7 @@ router.put("/contacts/:contactId", async (req, res, next) => {
   }
 });
 
-router.patch("/contacts/:contactId", async (req, res, next) => {
+router.patch("/contacts/:contactId/favorite", async (req, res, next) => {
   const { contactId } = req.params;
   const { favorite } = req.body;
   try {
@@ -132,7 +132,7 @@ router.patch("/contacts/:contactId", async (req, res, next) => {
     }
     res.status(200).json({
       status: "success",
-      message: `Zaktualizowano dane kontaktu o id: ${contactId}`,
+      message: `Zaktualizowano dane kontaktu o id: ${contactId}, favorite: ${favorite}`,
     });
   } catch (error) {
     console.error(`Błąd podczas zmiany statusu: ${error.message}`);
