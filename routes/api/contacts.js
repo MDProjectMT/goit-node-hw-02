@@ -1,22 +1,14 @@
 import express from "express";
-import {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-} from "../../models/contacts.js";
-import { contactSchema } from "../../validators.js";
+import { Contact } from "../../models/contacts.js";
 
 const router = express.Router();
 
 router.get("/contacts", async (_req, res, next) => {
   try {
-    const allContacts = await listContacts();
-    res.json({
+    const contacts = await Contact.find();
+    return res.json({
       status: "success",
-      message: "Pobrano całą listę kontaktów!!",
-      data: allContacts,
+      result: contacts,
     });
   } catch (error) {
     next(error);
@@ -24,13 +16,15 @@ router.get("/contacts", async (_req, res, next) => {
 });
 
 router.get("/contacts/:contactId", async (req, res, next) => {
+  console.log("Hej");
+  const { contactId } = req.params;
   try {
-    const contact = await getContactById(req.params.contactId);
+    const contact = await Contact.findById(contactId);
     console.log(req.params);
     if (contact) {
       res.json({
         status: "success",
-        message: `Wyszukiwanie kontaktu po ID, ID kontaktu: ${req.params.contactId}`,
+        message: `Wyszukiwanie kontaktu po ID, ID kontaktu: ${contactId}`,
         data: contact,
       });
     } else {
@@ -40,13 +34,15 @@ router.get("/contacts/:contactId", async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.error(`Błąd podczas wyszukiwania kontaktu: ${error.message}`);
     next(error);
   }
 });
 
 router.delete("/contacts/:contactId", async (req, res, next) => {
+  const { contactId } = req.params.contactId;
   try {
-    const contact = await removeContact(req.params.contactId);
+    const contact = await Contact.findOneAndDelete(contactId);
     if (contact) {
       res.json({
         status: "success",
@@ -60,49 +56,40 @@ router.delete("/contacts/:contactId", async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.error(`Błąd podczas wyszukiwania kontaktu: ${error.message}`);
     next(error);
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/contacts", async (req, res, next) => {
+  const { name, email, phone, favorite } = req.body;
   try {
-    const { name, email, phone } = req.body;
-    const { error } = contactSchema.validate({ name, email, phone });
-
-    if (error) {
-      return res.status(400).json({
-        status: "error",
-        message: error.details.map((detail) => detail.message).join(", "),
-      });
-    }
-    const newContact = await addContact(name, email, phone);
+    const newContact = await Contact.create({ name, email, phone, favorite });
     res.json({
       status: "success",
-      message: "Kontakt został dodany do listy",
+      message: "Kontakt został dodany do listy kontaktów w bazie danych",
       data: newContact,
     });
   } catch (error) {
+    console.error(`Błąd podczas dodawania nowego kontaktu: ${error.message}`);
     next(error);
   }
 });
 
 router.put("/contacts/:contactId", async (req, res, next) => {
+  const { contactId } = req.params;
+  const { name, email, phone, favorite } = req.body;
   try {
-    const { contactId } = req.params;
-    const { name, email, phone } = req.body;
-
-    const { error } = contactSchema.validate(
-      { name, email, phone },
-      { abortEarly: false }
+    const updatedContact = await Contact.findByIdAndUpdate(
+      contactId,
+      {
+        name,
+        email,
+        phone,
+        favorite,
+      },
+      { new: true, runValidators: true }
     );
-
-    if (error) {
-      return res.status(400).json({
-        status: "error",
-        message: error.details.map((detail) => detail.message).join(", "),
-      });
-    }
-    const updatedContact = await updateContact(contactId, name, email, phone);
     if (!updatedContact) {
       return res.status(404).json({
         status: "error",
@@ -115,6 +102,40 @@ router.put("/contacts/:contactId", async (req, res, next) => {
       data: updatedContact,
     });
   } catch (error) {
+    console.error(
+      `Błąd podczas aktualizowania danych kontaktu: ${error.message}`
+    );
+    next(error);
+  }
+});
+
+router.patch("/contacts/:contactId/favorite", async (req, res, next) => {
+  const { contactId } = req.params;
+  const { favorite } = req.body;
+  try {
+    if (!favorite) {
+      return res.status(400).json({
+        status: "error",
+        message: `Brak wypełnionego pola favorite`,
+      });
+    }
+    const updateStatusContact = await Contact.findByIdAndUpdate(
+      contactId,
+      { favorite },
+      { new: true, runValidators: true }
+    );
+    if (!updateStatusContact) {
+      return res.status(404).json({
+        status: "error",
+        message: `Nie znaleziono kontaktu o id: ${contactId}`,
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      message: `Zaktualizowano dane kontaktu o id: ${contactId}, favorite: ${favorite}`,
+    });
+  } catch (error) {
+    console.error(`Błąd podczas zmiany statusu: ${error.message}`);
     next(error);
   }
 });
