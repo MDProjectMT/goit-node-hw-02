@@ -16,7 +16,6 @@ router.get("/contacts", async (_req, res, next) => {
 });
 
 router.get("/contacts/:contactId", async (req, res, next) => {
-  console.log("Hej");
   const { contactId } = req.params;
   try {
     const contact = await Contact.findById(contactId);
