@@ -78,7 +78,7 @@ router.post("/users/login", async (req, res, _next) => {
     return res.status(401).json({
       status: "401 Unauthorized",
       code: 401,
-      message: "Email or password is wron",
+      message: "Email or password is wrong",
     });
   }
 });
