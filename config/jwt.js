@@ -12,7 +12,7 @@ export default function setJWTStrategy() {
   passport.use(
     new JWTStrategy(params, async function (payload, done) {
       try {
-        const user = await User.findOne({
+        const user = await User.findById({
           _id: payload.id,
         }).lean();
         if (!user) {

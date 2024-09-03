@@ -35,8 +35,8 @@ router.post("/users/signup", async (req, res, next) => {
       code: 201,
       message: "Registration successfull",
       user: {
-        email: user.email,
-        subscription: user.subscription,
+        email: newUser.email,
+        subscription: newUser.subscription,
       },
     });
   } catch (error) {
@@ -64,11 +64,15 @@ router.post("/users/login", async (req, res, _next) => {
       username: user.username,
     };
     const token = jwt.sign(payload, process.env.SECRET, { expiresIn: "1w" });
+
+    user.token = token;
+    await user.save();
+
     return res.status(200).json({
       status: "200 OK",
       code: 200,
       message: "Log in successfull",
-      token: { token },
+      token: token,
       user: {
         email: user.email,
         subscription: user.subscription,
